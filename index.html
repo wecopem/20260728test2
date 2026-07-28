@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>シンプルタイマー</title>
+<style>
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #1e1e2e;
+    color: #f5f5f5;
+    font-family: "Helvetica Neue", Arial, sans-serif;
+  }
+  .app {
+    text-align: center;
+    padding: 2rem;
+  }
+  h1 {
+    font-size: 1.2rem;
+    font-weight: normal;
+    color: #a0a0b0;
+    margin-bottom: 1.5rem;
+    letter-spacing: 0.1em;
+  }
+  #display {
+    font-size: 5rem;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: 0.05em;
+    margin-bottom: 2rem;
+  }
+  .inputs {
+    display: flex;
+    gap: 0.5rem;
+    justify-content: center;
+    margin-bottom: 1.5rem;
+  }
+  .inputs input {
+    width: 4rem;
+    padding: 0.5rem;
+    font-size: 1.2rem;
+    text-align: center;
+    border-radius: 8px;
+    border: none;
+    background: #2c2c3e;
+    color: #f5f5f5;
+  }
+  .inputs label {
+    display: block;
+    font-size: 0.7rem;
+    color: #a0a0b0;
+    margin-top: 0.2rem;
+  }
+  .buttons {
+    display: flex;
+    gap: 0.75rem;
+    justify-content: center;
+  }
+  button {
+    padding: 0.7rem 1.4rem;
+    font-size: 1rem;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    background: #4f8cff;
+    color: white;
+    transition: opacity 0.15s;
+  }
+  button:hover { opacity: 0.85; }
+  button:disabled { opacity: 0.4; cursor: not-allowed; }
+  #resetBtn { background: #555568; }
+  #display.finished { color: #ff6b6b; }
+</style>
+</head>
+<body>
+  <div class="app">
+    <h1>シンプルタイマー</h1>
+    <div id="display">00:00:00</div>
+    <div class="inputs">
+      <div>
+        <input type="number" id="hours" min="0" max="99" value="0">
+        <label>時間</label>
+      </div>
+      <div>
+        <input type="number" id="minutes" min="0" max="59" value="5">
+        <label>分</label>
+      </div>
+      <div>
+        <input type="number" id="seconds" min="0" max="59" value="0">
+        <label>秒</label>
+      </div>
+    </div>
+    <div class="buttons">
+      <button id="startBtn">開始</button>
+      <button id="pauseBtn" disabled>一時停止</button>
+      <button id="resetBtn">リセット</button>
+    </div>
+  </div>
+
+<audio id="alarm" preload="auto">
+  <source src="data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQAAAAA=" type="audio/wav">
+</audio>
+
+<script>
+  const display = document.getElementById('display');
+  const hoursInput = document.getElementById('hours');
+  const minutesInput = document.getElementById('minutes');
+  const secondsInput = document.getElementById('seconds');
+  const startBtn = document.getElementById('startBtn');
+  const pauseBtn = document.getElementById('pauseBtn');
+  const resetBtn = document.getElementById('resetBtn');
+
+  let remainingSeconds = 0;
+  let timerId = null;
+
+  function formatTime(totalSeconds) {
+    const h = Math.floor(totalSeconds / 3600);
+    const m = Math.floor((totalSeconds % 3600) / 60);
+    const s = totalSeconds % 60;
+    return [h, m, s].map(n => String(n).padStart(2, '0')).join(':');
+  }
+
+  function updateDisplay() {
+    display.textContent = formatTime(remainingSeconds);
+  }
+
+  function getInputSeconds() {
+    const h = parseInt(hoursInput.value, 10) || 0;
+    const m = parseInt(minutesInput.value, 10) || 0;
+    const s = parseInt(secondsInput.value, 10) || 0;
+    return h * 3600 + m * 60 + s;
+  }
+
+  function setInputsDisabled(disabled) {
+    hoursInput.disabled = disabled;
+    minutesInput.disabled = disabled;
+    secondsInput.disabled = disabled;
+  }
+
+  function tick() {
+    remainingSeconds--;
+    updateDisplay();
+    if (remainingSeconds <= 0) {
+      finish();
+    }
+  }
+
+  function finish() {
+    clearInterval(timerId);
+    timerId = null;
+    display.classList.add('finished');
+    startBtn.disabled = false;
+    pauseBtn.disabled = true;
+    setInputsDisabled(false);
+    document.getElementById('alarm').play().catch(() => {});
+    alert('タイマー終了！');
+  }
+
+  function start() {
+    display.classList.remove('finished');
+    if (timerId) return;
+    if (remainingSeconds <= 0) {
+      remainingSeconds = getInputSeconds();
+      if (remainingSeconds <= 0) return;
+    }
+    setInputsDisabled(true);
+    startBtn.disabled = true;
+    pauseBtn.disabled = false;
+    updateDisplay();
+    timerId = setInterval(tick, 1000);
+  }
+
+  function pause() {
+    clearInterval(timerId);
+    timerId = null;
+    startBtn.disabled = false;
+    pauseBtn.disabled = true;
+  }
+
+  function reset() {
+    clearInterval(timerId);
+    timerId = null;
+    remainingSeconds = 0;
+    display.classList.remove('finished');
+    setInputsDisabled(false);
+    startBtn.disabled = false;
+    pauseBtn.disabled = true;
+    updateDisplay();
+  }
+
+  startBtn.addEventListener('click', start);
+  pauseBtn.addEventListener('click', pause);
+  resetBtn.addEventListener('click', reset);
+
+  updateDisplay();
+</script>
+</body>
+</html>
