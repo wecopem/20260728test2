@@ -55,6 +55,17 @@
     color: #a0a0b0;
     margin-top: 0.2rem;
   }
+  .presets {
+    display: flex;
+    gap: 0.5rem;
+    justify-content: center;
+    margin-bottom: 1.5rem;
+  }
+  .presets button {
+    padding: 0.4rem 0.9rem;
+    font-size: 0.85rem;
+    background: #2c2c3e;
+  }
   .buttons {
     display: flex;
     gap: 0.75rem;
@@ -94,6 +105,11 @@
         <label>秒</label>
       </div>
     </div>
+    <div class="presets">
+      <button type="button" class="presetBtn" data-seconds="30">30秒</button>
+      <button type="button" class="presetBtn" data-seconds="60">1分</button>
+      <button type="button" class="presetBtn" data-seconds="180">3分</button>
+    </div>
     <div class="buttons">
       <button id="startBtn">開始</button>
       <button id="pauseBtn" disabled>一時停止</button>
@@ -113,6 +129,7 @@
   const startBtn = document.getElementById('startBtn');
   const pauseBtn = document.getElementById('pauseBtn');
   const resetBtn = document.getElementById('resetBtn');
+  const presetBtns = document.querySelectorAll('.presetBtn');
 
   let remainingSeconds = 0;
   let timerId = null;
@@ -139,6 +156,14 @@
     hoursInput.disabled = disabled;
     minutesInput.disabled = disabled;
     secondsInput.disabled = disabled;
+    presetBtns.forEach(btn => { btn.disabled = disabled; });
+  }
+
+  function applyPreset(totalSeconds) {
+    if (timerId) return;
+    hoursInput.value = Math.floor(totalSeconds / 3600);
+    minutesInput.value = Math.floor((totalSeconds % 3600) / 60);
+    secondsInput.value = totalSeconds % 60;
   }
 
   function tick() {
@@ -195,6 +220,9 @@
   startBtn.addEventListener('click', start);
   pauseBtn.addEventListener('click', pause);
   resetBtn.addEventListener('click', reset);
+  presetBtns.forEach(btn => {
+    btn.addEventListener('click', () => applyPreset(parseInt(btn.dataset.seconds, 10)));
+  });
 
   updateDisplay();
 </script>
